@@ -1,0 +1,248 @@
+{
+  "openapi": "3.2.0",
+  "servers": [{ "url": "http://localhost:3004", "description": "Local Server" }],
+  "info": { "version": "0.0.1", "title": "result-service", "description": "", "license": { "name": "UNLICENSED" } },
+  "paths": {
+    "/attempts": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateAttemptDto" } } },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttemptResponse" } } }
+          }
+        },
+        "x-samchon-accessor": ["attempts", "create"],
+        "x-samchon-controller": "AttemptsController"
+      },
+      "get": {
+        "tags": [],
+        "parameters": [{ "name": "quizId", "in": "query", "schema": { "type": "number" }, "required": false }],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Attempt" } } }
+            }
+          }
+        },
+        "x-samchon-accessor": ["attempts", "findAll"],
+        "x-samchon-controller": "AttemptsController"
+      }
+    },
+    "/attempts/submit": {
+      "post": {
+        "tags": [],
+        "parameters": [],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SubmitAttemptDto" } } },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "score": { "type": "string" },
+                    "answers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "number" },
+                          "questionId": { "type": "number" },
+                          "text": { "type": "string" },
+                          "options": { "type": "array", "items": { "type": "string" } },
+                          "selectedOptionIndex": { "oneOf": [{ "type": "null" }, { "type": "number" }] },
+                          "correctOptionIndex": { "type": "number" },
+                          "isCorrect": { "type": "boolean" }
+                        },
+                        "required": [
+                          "id",
+                          "questionId",
+                          "text",
+                          "options",
+                          "selectedOptionIndex",
+                          "correctOptionIndex",
+                          "isCorrect"
+                        ]
+                      }
+                    }
+                  },
+                  "required": ["score", "answers"]
+                }
+              }
+            }
+          }
+        },
+        "x-samchon-accessor": ["attempts", "submit"],
+        "x-samchon-controller": "AttemptsController"
+      }
+    },
+    "/attempts/{id}": {
+      "get": {
+        "tags": [],
+        "parameters": [{ "name": "id", "in": "path", "schema": { "type": "string" }, "required": true }],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttemptResponse" } } }
+          }
+        },
+        "x-samchon-accessor": ["attempts", "findOne"],
+        "x-samchon-controller": "AttemptsController"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AttemptResponse": {
+        "type": "object",
+        "properties": {
+          "answers": {
+            "type": "array",
+            "items": {
+              "oneOf": [{ "$ref": "#/components/schemas/Answer" }, { "$ref": "#/components/schemas/SafeAnswer" }]
+            }
+          },
+          "id": { "type": "number" },
+          "attemptNumber": { "type": "number" },
+          "userId": { "type": "string" },
+          "quizId": { "type": "number" },
+          "status": { "oneOf": [{ "const": "in_progress" }, { "const": "submitted" }, { "const": "expired" }] },
+          "score": { "type": "number" },
+          "totalQuestions": { "type": "number" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "submittedAt": { "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }] }
+        },
+        "required": [
+          "answers",
+          "id",
+          "attemptNumber",
+          "userId",
+          "quizId",
+          "status",
+          "score",
+          "totalQuestions",
+          "createdAt",
+          "expiresAt",
+          "submittedAt"
+        ]
+      },
+      "Answer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "questionId": { "type": "number" },
+          "text": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" } },
+          "selectedOptionIndex": { "oneOf": [{ "type": "null" }, { "type": "number" }] },
+          "correctOptionIndex": { "type": "number" },
+          "isCorrect": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "attempt": { "$ref": "#/components/schemas/Attempt" },
+          "attemptId": { "type": "number" }
+        },
+        "required": [
+          "id",
+          "questionId",
+          "text",
+          "options",
+          "selectedOptionIndex",
+          "correctOptionIndex",
+          "isCorrect",
+          "createdAt",
+          "attempt",
+          "attemptId"
+        ]
+      },
+      "Attempt": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "attemptNumber": { "type": "number" },
+          "userId": { "type": "string" },
+          "quizId": { "type": "number" },
+          "status": { "oneOf": [{ "const": "in_progress" }, { "const": "submitted" }, { "const": "expired" }] },
+          "score": { "type": "number" },
+          "totalQuestions": { "type": "number" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "submittedAt": { "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }] },
+          "answers": { "type": "array", "items": { "$ref": "#/components/schemas/Answer" } }
+        },
+        "required": [
+          "id",
+          "attemptNumber",
+          "userId",
+          "quizId",
+          "status",
+          "score",
+          "totalQuestions",
+          "createdAt",
+          "expiresAt",
+          "submittedAt",
+          "answers"
+        ]
+      },
+      "SafeAnswer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "questionId": { "type": "number" },
+          "text": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" } },
+          "selectedOptionIndex": { "oneOf": [{ "type": "null" }, { "type": "number" }] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "attemptId": { "type": "number" }
+        },
+        "required": ["id", "questionId", "text", "options", "selectedOptionIndex", "createdAt", "attemptId"]
+      },
+      "CreateAttemptDto": {
+        "type": "object",
+        "properties": {
+          "quizId": { "type": "number" },
+          "duration": { "type": "number" },
+          "questions": { "type": "array", "items": { "$ref": "#/components/schemas/CreateAttemptQuestionDto" } }
+        },
+        "required": ["quizId", "duration", "questions"]
+      },
+      "CreateAttemptQuestionDto": {
+        "type": "object",
+        "properties": {
+          "questionId": { "type": "number" },
+          "text": { "type": "string" },
+          "options": { "type": "array", "items": { "type": "string" } },
+          "correctOptionIndex": { "type": "number" }
+        },
+        "required": ["questionId", "text", "options", "correctOptionIndex"]
+      },
+      "SubmitAttemptDto": {
+        "type": "object",
+        "properties": {
+          "attemptId": { "type": "number" },
+          "answers": { "$ref": "#/components/schemas/Recordnumbernumber" }
+        },
+        "required": ["attemptId", "answers"]
+      },
+      "Recordnumbernumber": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "description": "Construct a type with a set of properties K of type T",
+        "additionalProperties": { "type": "number" }
+      }
+    }
+  },
+  "tags": [],
+  "x-typia-emended-v12": true
+}
